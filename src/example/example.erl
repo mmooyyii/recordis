@@ -13,7 +13,7 @@
 }).
 
 -record(student, {
-    column = [{id, primary_key}, {name, string}, {age, int}],
+    column = [{id, primary_key}, {name, string}, {age, string}],
     link = [class],
     id,
     name,
@@ -45,16 +45,19 @@
 }).
 
 new() ->
-    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
-    recordis:use(C),
+    case whereis(test) of
+        undefined ->
+            {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+            register(test, C);
+        _ -> ok
+    end,
+    recordis:use(test),
     Obj = #test{
         id = <<"10001">>,
-        name = <<"123">>,
         a = #{1 => 2},
-        b = sets:new(),
-        c = #{1 => 2}
+        c = [{1, 2}]
     },
     recordis_ctrl:delete(Obj),
     recordis_ctrl:new(Obj),
-    recordis_ctrl:get(#test{id = <<"10001">>}),
-    recordis_ctrl:delete(Obj).
+    recordis_ctrl:get(#test{id = <<"10001">>}).
+

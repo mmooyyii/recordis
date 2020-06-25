@@ -48,7 +48,6 @@ format_return([#redis_cmd{transfer = T} | Cmds], [{ok, R} | RedisData], Acc) ->
 format_return([], [], Acc) ->
     lists:reverse(Acc).
 
-
 exist(Key) ->
     case q([
         #redis_cmd{cmd = [<<"EXISTS">>, Key]},

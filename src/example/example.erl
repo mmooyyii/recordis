@@ -59,5 +59,6 @@ new() ->
     },
     recordis_ctrl:delete(Obj),
     recordis_ctrl:new(Obj),
-    recordis_ctrl:get(#test{id = <<"10001">>}).
+    recordis_ctrl:get(#test{id = <<"10001">>}),
+    recordis_ctrl:update(#test{id = <<"10001">>}).
 

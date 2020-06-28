@@ -31,8 +31,17 @@ new(Record) ->
     end.
 
 %% update when primary key exist
-update(_Record) -> ok.
-
+update(Record) ->
+    case recordis_redis:exist(recordis_utils:primary_key(Record)) of
+        true ->
+            {NKeys, SKeys} = parse_record(Record),
+            init_obj(Record,
+                recordis_utils:without_value(NKeys, undefined),
+                recordis_utils:without_value(SKeys, undefined)
+            );
+        false ->
+            throw(primary_key_not_find_error)
+    end.
 
 delete(Record) ->
     %% 删除时会级联删除relation中的关系

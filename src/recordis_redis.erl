@@ -35,9 +35,6 @@ remove_empty(Cmd) when is_list(Cmd) ->
     lists:filter(fun(#redis_cmd{cmd = undefined}) -> false;(_) -> true end, Cmd).
 
 format_return(Cmds, Return) when length(Cmds) =:= length(Return) ->
-    io:format("~n~n~n"),
-    io:format("~p~n", [{Cmds, Return}]),
-    io:format("~n~n~n"),
     format_return(Cmds, Return, []).
 format_return([#redis_cmd{transfer = {M, F}} | Cmds], [{ok, R} | RedisData], Acc) ->
     format_return(Cmds, RedisData, [apply(M, F, [R]) | Acc]);

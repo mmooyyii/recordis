@@ -9,9 +9,7 @@
 set(_Key, []) ->
     #redis_cmd{};
 set(Key, Values) ->
-    #redis_cmd{
-        cmd = [<<"ZADD">>, Key] ++ recordis_type:redis(sorted_set, Values)
-    }.
+    #redis_cmd{cmd = [<<"ZADD">>, Key] ++ recordis_type:redis(sorted_set, Values)}.
 
 get(Key) ->
     #redis_cmd{

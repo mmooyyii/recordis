@@ -19,8 +19,11 @@
 %%  non data structure type key is called by n_key for short
 %%  data structure type key is called by s_key for short
 new(Record) ->
-    case recordis_redis:exist(recordis_utils:primary_key(Record)) of
+    Type = recordis_utils:obj_type(Record),
+    Pk = recordis_utils:obj_primary_key(Record),
+    case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
         false ->
+            recordis_redis:q(recordis_set:set(Type, sets:from_list([Pk]))),
             {NKeys, SKeys} = parse_record(Record),
             init_obj(Record,
                 recordis_utils:without_value(NKeys, undefined),
@@ -32,7 +35,9 @@ new(Record) ->
 
 %% update when primary key exist
 update(Record) ->
-    case recordis_redis:exist(recordis_utils:primary_key(Record)) of
+    Type = recordis_utils:obj_type(Record),
+    Pk = recordis_utils:obj_primary_key(Record),
+    case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
         true ->
             {NKeys, SKeys} = parse_record(Record),
             init_obj(Record,
@@ -45,6 +50,9 @@ update(Record) ->
 
 delete(Record) ->
     %% 删除时会级联删除relation中的关系
+    Type = recordis_utils:obj_type(Record),
+    Pk = recordis_utils:obj_primary_key(Record),
+    recordis_redis:q(recordis_set:delete(Type, Pk)),
     recordis_redis:delete(recordis_utils:all_keys(Record)).
 
 get(RecordWithPk) when is_tuple(RecordWithPk) ->
@@ -159,7 +167,3 @@ build_record(Record, Map) ->
         recordis_utils:obj_set_value(Index, Val, Acc)
         end,
     maps:fold(F, Record, Map).
-
-
-
-

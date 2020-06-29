@@ -2,13 +2,16 @@
 -author("yimo").
 
 %% API
--export([is_member/2, set/2, get/1]).
+-export([is_member/2, set/2, get/1, delete/2]).
 -include("recordis.hrl").
 
 
 %% read
 is_member(Key, Element) ->
-    [<<"SISMEMBER">>, Key, Element].
+    #redis_cmd{cmd = [<<"SISMEMBER">>, Key, Element], transfer = fun check_is_member/1}.
+
+delete(Key, Remove) ->
+    #redis_cmd{cmd = [<<"SREM">>, Key, Remove]}.
 
 % write
 set(Key, Set) ->
@@ -21,5 +24,5 @@ get(Key) ->
     #redis_cmd{cmd = [<<"SMEMBERS">>, Key], transfer = {sets, from_list}}.
 
 
-
-
+check_is_member(<<"1">>) -> true;
+check_is_member(_) -> false.

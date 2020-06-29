@@ -8,9 +8,7 @@
 set(_Key, Map) when Map =:= #{} ->
     #redis_cmd{};
 set(Key, Map) ->
-    #redis_cmd{
-        cmd = [<<"HMSET">>, Key] ++ recordis_type:redis(hash, Map)
-    }.
+    #redis_cmd{cmd = [<<"HMSET">>, Key] ++ recordis_type:redis(hash, Map)}.
 
 
 get(Key) ->
@@ -25,7 +23,6 @@ get(Key, KeysWithType) ->
     }.
 
 % private
-
 make_map(KeysWithType, Return) when length(KeysWithType) =:= length(Return) ->
     make_map(KeysWithType, Return, #{}).
 

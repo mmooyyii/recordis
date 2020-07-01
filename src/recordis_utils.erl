@@ -3,6 +3,7 @@
 
 -define(Delimiter, <<":">>).
 
+
 %% API
 -export([
     primary_key/1,
@@ -10,9 +11,9 @@
     obj_column/1,
     obj_column_key/1,
     obj_primary_key/1,
-    obj_relation/1,
-    key_concat/1,
+    obj_link/1,
     obj_value/2,
+    key_concat/1,
     enumerate/1,
     enumerate_r/1,
     flatten_map/1,
@@ -25,6 +26,14 @@
     lists_div/2
 ]).
 
+-compile({inline, [
+    obj_type/1,
+    obj_column/1,
+    obj_column_key/1,
+    obj_primary_key/1,
+    obj_link/1,
+    obj_value/2
+]}).
 
 primary_key(Obj) ->
     key_concat([obj_type(Obj), obj_primary_key(Obj)]).
@@ -38,7 +47,7 @@ obj_column(Obj) ->
 obj_column_key(Obj) ->
     lists:map(fun({Key, _}) -> Key end, erlang:element(2, Obj)).
 
-obj_relation(Obj) ->
+obj_link(Obj) ->
     erlang:element(3, Obj).
 obj_primary_key(Obj) ->
     case erlang:element(4, Obj) of
@@ -97,7 +106,6 @@ is_s_key(hash) -> true;
 is_s_key(set) -> true;
 is_s_key(sorted_set) -> true;
 is_s_key(_) -> false.
-
 
 soft_delete_key(Key) ->
     <<Key/binary, ":d">>.

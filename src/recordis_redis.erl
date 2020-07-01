@@ -3,7 +3,6 @@
 
 %% API
 -export([q/1]).
--export([exist/1, delete/1]).
 -export([query/1, query_pipe/1]).
 -include("recordis.hrl").
 
@@ -44,17 +43,3 @@ format_return([#redis_cmd{transfer = T} | Cmds], [{ok, R} | RedisData], Acc) ->
     format_return(Cmds, RedisData, [T(R) | Acc]);
 format_return([], [], Acc) ->
     lists:reverse(Acc).
-
-exist(Key) ->
-    case q([
-        #redis_cmd{cmd = [<<"EXISTS">>, Key]},
-        #redis_cmd{cmd = [<<"EXISTS">>, recordis_utils:soft_delete_key(Key)]}
-    ]) of
-        [<<"0">>, <<"0">>] -> false;
-        _ -> true
-    end.
-
-delete(Keys) when is_list(Keys) ->
-    q(lists:map(fun(Key) -> #redis_cmd{cmd = [<<"DEL">>, Key]} end, Keys));
-delete(Key) ->
-    q(#redis_cmd{cmd = [<<"DEL">>, Key]}).

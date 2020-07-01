@@ -53,7 +53,7 @@ delete(Record) ->
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
     recordis_redis:q(recordis_set:delete(Type, Pk)),
-    recordis_redis:delete(recordis_utils:all_keys(Record)).
+    recordis_redis:q(recordis_key:delete(recordis_utils:all_keys(Record))).
 
 get(RecordWithPk) when is_tuple(RecordWithPk) ->
     erlang:hd(p_get([RecordWithPk], recordis_utils:obj_column(RecordWithPk))).
@@ -69,7 +69,7 @@ p_get(Records, Keys) when is_list(Records) ->
 
 format_get_return(Record, Keys, [Main | Struct]) ->
     SKeyWithType = lists:filter(fun({_Key, Type}) -> recordis_utils:is_s_key(Type) end, Keys),
-    SKeys = [K || {K, T} <- SKeyWithType],
+    SKeys = [K || {K, _T} <- SKeyWithType],
     build_record(Record, maps:merge(Main, maps:from_list(lists:zip(SKeys, Struct)))).
 
 

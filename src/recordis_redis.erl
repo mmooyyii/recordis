@@ -15,13 +15,15 @@ q(C) when is_list(C) ->
 query(#redis_cmd{cmd = Cmd}) ->
     case client_or_function() of
         {{Module, Q}, _} -> apply(Module, Q, [remove_empty(Cmd)]);
-        Client -> eredis:q(Client, Cmd)
+        Client ->
+            eredis:q(Client, Cmd)
     end.
 query_pipe(C) ->
     Cmds = lists:map(fun(#redis_cmd{cmd = Cmd}) -> Cmd end, C),
     case client_or_function() of
         {_, {Module, QP}} -> apply(Module, QP, [Cmds]);
-        Client -> eredis:qp(Client, Cmds)
+        Client ->
+            eredis:qp(Client, Cmds)
     end.
 client_or_function() ->
     case get(recordis) of

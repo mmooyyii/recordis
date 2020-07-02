@@ -23,7 +23,6 @@ new(Record) ->
     Pk = recordis_utils:obj_primary_key(Record),
     case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
         false ->
-            recordis_redis:q(recordis_set:set(Type, sets:from_list([Pk]))),
             {NKeys, SKeys} = parse_record(Record),
             init_obj(Record,
                 recordis_utils:without_value(NKeys, undefined),
@@ -61,11 +60,10 @@ get(RecordWithPk, Keys) when is_tuple(RecordWithPk) ->
     erlang:hd(p_get([RecordWithPk], Keys)).
 
 p_get(Records, Keys) when is_list(Records) ->
-    Record = erlang:hd(Records),
     Cmds = lists:map(fun(Record) -> get_cmd(Record, Keys) end, Records),
     CmdPipe = lists:concat(Cmds),
     Rts = recordis_utils:lists_div(length(Records), recordis_redis:q(CmdPipe)),
-    lists:map(fun(Rt) -> format_get_return(Record, Keys, Rt) end, Rts).
+    lists:map(fun(Rt) -> format_get_return(erlang:hd(Records), Keys, Rt) end, Rts).
 
 format_get_return(Record, Keys, [Main | Struct]) ->
     SKeyWithType = lists:filter(fun({_Key, Type}) -> recordis_utils:is_s_key(Type) end, Keys),
@@ -90,15 +88,15 @@ get_s_keys(Record, SKeys) ->
               end, redis_s_key(Record, SKeys)).
 
 init_obj(Record, NKeys, SKeys) ->
-    PrimaryKey = recordis_utils:key_concat([
-        recordis_utils:obj_type(Record),
-        recordis_utils:obj_primary_key(Record)]),
+    Type = recordis_utils:obj_type(Record),
+    Pk = recordis_utils:obj_primary_key(Record),
+    PkCmd = recordis_set:set(Type, Pk),
+    PrimaryKey = recordis_utils:primary_key(Record),
     NKeysCmd = recordis_hash:set(PrimaryKey, n_keys_to_map(NKeys)),
     S_Keys = redis_s_key(Record, SKeys),
     SaveCmd = save_redis(S_Keys),
-    Cmds = [NKeysCmd] ++ SaveCmd,
+    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd),
     recordis_redis:q(Cmds).
-
 
 parse_record(Record) ->
     Column = recordis_utils:obj_column(Record),
@@ -121,8 +119,6 @@ check_row({Key, KeyType}, Value) ->
         false -> {n, {Key, KeyType}, Value}
     end;
 check_row(_, _) -> throw(type_error).
-
-
 
 redis_s_key(Record, SKey) ->
     Pk = recordis_utils:obj_primary_key(Record),

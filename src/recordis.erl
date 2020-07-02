@@ -3,7 +3,8 @@
 
 %% API
 -export([use/1, use/2]).
--export([new/1, get/1, update/1, delete/1]).
+-export([new/1, get/1, delete/1]).
+-export([update/1]).
 
 use(Client) ->
     put(recordis, Client).

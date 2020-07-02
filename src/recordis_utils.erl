@@ -11,6 +11,7 @@
     obj_column/1,
     obj_column_key/1,
     obj_primary_key/1,
+    obj_callback/1,
     obj_link/1,
     obj_value/2,
     key_concat/1,
@@ -47,19 +48,22 @@ obj_column(Obj) ->
 obj_column_key(Obj) ->
     lists:map(fun({Key, _}) -> Key end, erlang:element(2, Obj)).
 
+obj_callback(Obj) ->
+    erlang:element(4, Obj).
+
 obj_link(Obj) ->
     erlang:element(3, Obj).
 obj_primary_key(Obj) ->
-    case erlang:element(4, Obj) of
+    case erlang:element(5, Obj) of
         undefine -> throw(miss_primary_key_error);
         Pk -> Pk
     end.
 
 %% the primary key index is 1
 obj_value(Index, Obj) ->
-    erlang:element(Index + 3, Obj).
+    erlang:element(Index + 4, Obj).
 obj_set_value(Index, V, Obj) ->
-    erlang:setelement(Index + 3, Obj, V).
+    erlang:setelement(Index + 4, Obj, V).
 
 key_concat(Ls) ->
     list_to_binary(lists:join(?Delimiter, lists:map(fun to_binary/1, Ls))).
@@ -100,7 +104,6 @@ column_keys(Record) ->
         end
         end,
     lists:foldl(F, [], obj_column(Record)).
-
 
 is_s_key(hash) -> true;
 is_s_key(set) -> true;

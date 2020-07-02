@@ -2,31 +2,47 @@
 -author("yimo").
 
 %% API
--export([
-    is_linked/2,
-    link/2,
-    unlink/2]).
+-export([is_linked/2, link/2, unlink/2, linked/2]).
 
 is_linked(RecordA, RecordB) ->
     case is_linkable(RecordA, RecordB) of
         true ->
-            TypeA = recordis_utils:obj_type(RecordA),
-            PkA = recordis_utils:obj_primary_key(RecordA),
-            TypeB = recordis_utils:obj_type(RecordB),
-            PkB = recordis_utils:obj_primary_key(RecordB),
-            recordis_set:is_member(link_key(TypeA, TypeB, PkA), PkB);
+            {LinkKey, PkB} = link_args(RecordA, RecordB),
+            recordis_redis:q(recordis_set:is_member(LinkKey, PkB));
+        false ->
+            false
+    end.
+
+link(RecordA, RecordB) ->
+    case is_linkable(RecordA, RecordB) of
+        true ->
+            {LinkKey, PkB} = link_args(RecordA, RecordB),
+            recordis_redis:q(recordis_set:set(LinkKey, PkB));
         false ->
             error
     end.
 
-link(_A, _B) -> ok.
-
-unlink(_A, _B) -> ok.
-
-link_key(A, B, PkA) ->
-    recordis_utils:key_concat([A, B, PkA]).
+unlink(RecordA, RecordB) ->
+    case is_linkable(RecordA, RecordB) of
+        true ->
+            {LinkKey, PkB} = link_args(RecordA, RecordB),
+            recordis_redis:q(recordis_set:delete(LinkKey, PkB));
+        false ->
+            error
+    end.
 
 is_linkable(RecordA, RecordB) ->
     Links = recordis_utils:obj_link(RecordA),
     Type = recordis_utils:obj_type(RecordB),
     lists:member(Type, Links).
+
+linked(RecordAWithPk, RecordBWithNothing) ->
+    {LinkKey, _} = link_args(RecordAWithPk, RecordBWithNothing),
+    recordis_redis:q(recordis_set:get(LinkKey)).
+
+link_args(RecordA, RecordB) ->
+    TypeA = recordis_utils:obj_type(RecordA),
+    PkA = recordis_utils:obj_primary_key(RecordA),
+    TypeB = recordis_utils:obj_type(RecordB),
+    PkB = recordis_utils:obj_primary_key(RecordB),
+    {recordis_utils:key_concat([TypeA, TypeB, PkA]), PkB}.

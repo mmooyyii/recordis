@@ -5,7 +5,6 @@
 -export([set/2, get/1]).
 -include("recordis.hrl").
 
-
 set(_Key, []) ->
     #redis_cmd{};
 set(Key, Values) ->

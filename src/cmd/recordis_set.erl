@@ -14,11 +14,13 @@ delete(Key, Remove) ->
     #redis_cmd{cmd = [<<"SREM">>, Key, Remove]}.
 
 % write
-set(Key, Set) ->
+set(Key, Set) when is_tuple(Set) ->
     case sets:size(Set) of
         0 -> #redis_cmd{};
         _ -> #redis_cmd{cmd = [<<"SADD">>, Key] ++ recordis_type:redis(set, Set)}
-    end.
+    end;
+set(Key, Ele) ->
+    #redis_cmd{cmd = [<<"SADD">>, Key, Ele]}.
 
 get(Key) ->
     #redis_cmd{cmd = [<<"SMEMBERS">>, Key], transfer = {sets, from_list}}.

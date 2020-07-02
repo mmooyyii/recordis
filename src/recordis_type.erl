@@ -5,8 +5,8 @@
 -export([redis/2, erl/2]).
 
 redis(string, String) when is_binary(String) -> String;
-redis(int, Int) when is_integer(Int) -> binary_to_integer(Int);
-redis(float, Float) when is_float(Float) -> term_to_binary(Float);
+redis(int, Int) when is_integer(Int) -> integer_to_binary(Int);
+redis(float, Float) when is_float(Float) -> float_to_binary(Float);
 redis(term, Term) -> term_to_binary(Term);
 
 redis(hash, Map) -> maps:fold(fun(K, V, A) -> [K, V | A] end, [], Map);

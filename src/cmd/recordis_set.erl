@@ -6,14 +6,12 @@
 -include("recordis.hrl").
 
 
-%% read
 is_member(Key, Element) ->
-    #redis_cmd{cmd = [<<"SISMEMBER">>, Key, Element], transfer = fun check_is_member/1}.
+    #redis_cmd{cmd = [<<"SISMEMBER">>, Key, Element], transfer = fun(V) -> V =:= <<"1">> end}.
 
 delete(Key, Remove) ->
     #redis_cmd{cmd = [<<"SREM">>, Key, Remove]}.
 
-% write
 set(Key, Set) when is_tuple(Set) ->
     case sets:size(Set) of
         0 -> #redis_cmd{};
@@ -24,7 +22,3 @@ set(Key, Ele) ->
 
 get(Key) ->
     #redis_cmd{cmd = [<<"SMEMBERS">>, Key], transfer = {sets, from_list}}.
-
-
-check_is_member(<<"1">>) -> true;
-check_is_member(_) -> false.

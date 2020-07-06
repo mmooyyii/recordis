@@ -12,5 +12,5 @@ delete_test() ->
         #redis_io{function = q, in = [<<"DEL">>, <<"abc">>], out = {ok, <<"0">>}},
         #redis_io{function = qp, in = [[<<"DEL">>, <<"abc">>]], out = [{ok, <<"1">>}]}
     ]),
-    recordis_redis:q(recordis_key:delete(<<"abc">>)),
-    recordis_redis:q(recordis_key:delete([<<"abc">>])).
+    <<"0">> = recordis_redis:q(recordis_key:delete(<<"abc">>)),
+    [<<"1">>] = recordis_redis:q(recordis_key:delete([<<"abc">>])).

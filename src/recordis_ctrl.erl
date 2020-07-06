@@ -1,7 +1,7 @@
 -module(recordis_ctrl).
 -author("yimo").
 
-%% API
+%% TODO : 异常处理
 -export([
     new/1,
     delete/1,
@@ -15,10 +15,10 @@
 %% type: hash ,key {record}:{primary_key} -> {key: value}
 %% data structure type key:
 %% type: same as declare，key {record}:{key}:{primary_key} -> same as declare
-
 %%  non data structure type key is called by n_key for short
 %%  data structure type key is called by s_key for short
-new(Record) ->
+new(PreRecord) ->
+    Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
     case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
@@ -33,7 +33,8 @@ new(Record) ->
     end.
 
 %% update when primary key exist
-update(Record) ->
+update(PreRecord) ->
+    Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
     case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
@@ -47,8 +48,9 @@ update(Record) ->
             throw(primary_key_not_find_error)
     end.
 
-delete(Record) ->
+delete(PreRecord) ->
     %% 删除时会级联删除relation中的关系
+    Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
     recordis_redis:q(recordis_set:delete(Type, Pk)),
@@ -136,22 +138,6 @@ save_redis(SKeys) ->
         end,
         SKeys).
 
-%%filter(RecordWithKeys) -> throw(todo_error).
-%%%% filter函数，需要在该列有对应索引时才能生效，否则直接报错。
-%%%% 有order_index
-%%lt() -> ok.
-%%lte() -> ok.
-%%gt() -> ok.
-%%gte() -> ok.
-%%%% 有hash或order_index
-%%eq() -> ok.
-%%neq() -> ok.
-%%%% 类型必须为list，set，sorted_set，hash,且建立了inverted_index
-%%has() -> ok.
-%%%% 只能用于sorted_set
-%%order() -> ok.
-%%%% 只能用于sorted_set
-%%range() -> ok.
 
 n_keys_to_map(NKeys) ->
     maps:fold(fun({Key, Type}, V, Acc) -> Acc#{Key => recordis_type:redis(Type, V)} end, #{}, NKeys).

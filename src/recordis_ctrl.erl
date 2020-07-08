@@ -7,12 +7,7 @@
 -export([update/1]).
 -export([delete/1]).
 
-%% non data structure type key:
-%% type: hash ,key {record}:{primary_key} -> {key: value}
-%% data structure type key:
-%% type: same as declare，key {record}:{key}:{primary_key} -> same as declare
-%%  non data structure type key is called by n_key for short
-%%  data structure type key is called by s_key for short
+
 -spec new(tuple()) -> no_return() | throw_error.
 new(PreRecord) ->
     Record = recordis_callback:before_new(PreRecord),

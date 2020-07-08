@@ -1,15 +1,11 @@
 -module(recordis_ctrl).
 -author("yimo").
 
-%% TODO : 异常处理
--export([
-    new/1,
-    delete/1,
-    update/1,
-    get/1,
-    get/2,
-    build_record/2
-]).
+
+-export([new/1]).
+-export([get/1, get/2]).
+-export([update/1]).
+-export([delete/1]).
 
 %% non data structure type key:
 %% type: hash ,key {record}:{primary_key} -> {key: value}
@@ -17,49 +13,67 @@
 %% type: same as declare，key {record}:{key}:{primary_key} -> same as declare
 %%  non data structure type key is called by n_key for short
 %%  data structure type key is called by s_key for short
+-spec new(tuple()) -> no_return() | throw_error.
 new(PreRecord) ->
     Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
+    recordis_lock:acquire(Record),
     case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
         false ->
             {NKeys, SKeys} = parse_record(Record),
-            init_obj(Record,
-                recordis_utils:without_value(NKeys, undefined),
-                recordis_utils:without_value(SKeys, undefined)
-            );
+            Normal = recordis_utils:without_value(NKeys, undefined),
+            Special = recordis_utils:without_value(SKeys, undefined),
+            init_obj(Record, Normal, Special),
+            recordis_lock:release(Record);
         true ->
+            recordis_lock:release(Record),
             throw(key_conflict_error)
     end.
 
 %% update when primary key exist
+-spec update(tuple()) -> no_return() | throw_error.
 update(PreRecord) ->
     Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
+    recordis_lock:acquire(Record),
     case recordis_redis:q(recordis_set:is_member(Type, Pk)) of
         true ->
             {NKeys, SKeys} = parse_record(Record),
-            init_obj(Record,
-                recordis_utils:without_value(NKeys, undefined),
-                recordis_utils:without_value(SKeys, undefined)
-            );
+            Normal = recordis_utils:without_value(NKeys, undefined),
+            Special = recordis_utils:without_value(SKeys, undefined),
+            init_obj(Record, Normal, Special),
+            recordis_lock:release(Record);
         false ->
+            recordis_lock:release(Record),
             throw(primary_key_not_find_error)
     end.
 
+-spec delete(tuple()) -> no_return() | throw_error.
 delete(PreRecord) ->
     %% 删除时会级联删除relation中的关系
     Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:obj_type(Record),
     Pk = recordis_utils:obj_primary_key(Record),
+    recordis_lock:acquire(Record),
     recordis_redis:q(recordis_set:delete(Type, Pk)),
-    recordis_redis:q(recordis_key:delete(recordis_utils:all_keys(Record))).
+    recordis_redis:q(recordis_key:delete(recordis_utils:all_keys(Record))),
+    recordis_lock:release(Record).
 
+-spec get(tuple()) -> tuple().
 get(RecordWithPk) when is_tuple(RecordWithPk) ->
-    erlang:hd(p_get([RecordWithPk], recordis_utils:obj_column(RecordWithPk))).
+    recordis_lock:acquire(RecordWithPk),
+    Rt = erlang:hd(p_get([RecordWithPk], recordis_utils:obj_column(RecordWithPk))),
+    recordis_lock:release(RecordWithPk),
+    Rt.
+
+-spec get(tuple(), list()) -> tuple().
 get(RecordWithPk, Keys) when is_tuple(RecordWithPk) ->
-    erlang:hd(p_get([RecordWithPk], Keys)).
+    recordis_lock:acquire(RecordWithPk),
+    Rt = erlang:hd(p_get([RecordWithPk], Keys)),
+    recordis_lock:release(RecordWithPk),
+    Rt.
 
 p_get(Records, Keys) when is_list(Records) ->
     Cmds = lists:map(fun(Record) -> get_cmd(Record, Keys) end, Records),
@@ -137,7 +151,6 @@ save_redis(SKeys) ->
             ({sorted_set, Key, Val}) -> recordis_sorted_set:set(Key, Val)
         end,
         SKeys).
-
 
 n_keys_to_map(NKeys) ->
     maps:fold(fun({Key, Type}, V, Acc) -> Acc#{Key => recordis_type:redis(Type, V)} end, #{}, NKeys).

@@ -13,5 +13,5 @@ set(Key, Values) ->
 get(Key) ->
     #redis_cmd{
         cmd = [<<"ZRANGE">>, Key, 0, -1, <<"WITHSCORES">>],
-        transfer = fun(Return) -> recordis_type:erl(sorted_set, Return) end
+        formatter = fun(Return) -> recordis_type:erl(sorted_set, Return) end
     }.

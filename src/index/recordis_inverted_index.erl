@@ -5,5 +5,4 @@
 -export([]).
 
 %% 可用于sets,hash,sorted_set,list的 has 上。
-%% TODO：string like
 

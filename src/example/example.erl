@@ -14,13 +14,8 @@
         {b, set},
         {c, sorted_set}
     ],
-    link = [],
-    callback = [],
-    id,
-    name,
-    a,
-    b,
-    c
+    link = [], callback = [],
+    id, name, a, b, c
 }).
 
 new() ->
@@ -39,4 +34,3 @@ new() ->
         c = [{1, 2}]
     },
     recordis:new(Obj).
-

@@ -3,5 +3,5 @@
 
 -record(redis_cmd, {
     cmd :: list(),
-    transfer :: function() | {module(), function()}
+    formatter :: function() | {module(), function()}
 }).

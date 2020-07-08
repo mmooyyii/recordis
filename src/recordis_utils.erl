@@ -24,7 +24,8 @@
     soft_delete_key/1,
     obj_set_value/3,
     without_value/2,
-    lists_div/2
+    lists_div/2,
+    key_to_lock/1
 ]).
 
 -compile({inline, [
@@ -130,3 +131,7 @@ p_list_div(NLen, NLen, [A | Acc], List) ->
     p_list_div(0, NLen, [[], lists:reverse(A) | Acc], List);
 p_list_div(N, NLen, [A | Acc], [E | Rest]) ->
     p_list_div(N + 1, NLen, [[E | A] | Acc], Rest).
+
+
+key_to_lock(Key) ->
+    <<"lock", ?Delimiter/binary, Key/binary>>.

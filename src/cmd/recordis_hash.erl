@@ -12,14 +12,14 @@ set(Key, Map) ->
 
 
 get(Key) ->
-    #redis_cmd{cmd = [<<"HGETALL">>, Key], transfer = {recordis_utils, un_flatten_map}}.
+    #redis_cmd{cmd = [<<"HGETALL">>, Key], formatter = {recordis_utils, un_flatten_map}}.
 get(_Key, []) ->
     #redis_cmd{};
 get(Key, KeysWithType) ->
     Keys = lists:map(fun({K, _T}) -> K;(K) -> K end, KeysWithType),
     #redis_cmd{
         cmd = [<<"HMGET">>, Key] ++ Keys,
-        transfer = fun(Return) -> make_map(KeysWithType, Return) end
+        formatter = fun(Return) -> make_map(KeysWithType, Return) end
     }.
 
 % private

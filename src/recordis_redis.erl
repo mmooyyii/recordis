@@ -37,11 +37,11 @@ remove_empty(Cmd) when is_list(Cmd) ->
 
 format_return(Cmds, Return) when length(Cmds) =:= length(Return) ->
     format_return(Cmds, Return, []).
-format_return([#redis_cmd{transfer = {M, F}} | Cmds], [{ok, R} | RedisData], Acc) ->
+format_return([#redis_cmd{formatter = {M, F}} | Cmds], [{ok, R} | RedisData], Acc) ->
     format_return(Cmds, RedisData, [apply(M, F, [R]) | Acc]);
-format_return([#redis_cmd{transfer = undefined} | Cmds], [{ok, R} | RedisData], Acc) ->
+format_return([#redis_cmd{formatter = undefined} | Cmds], [{ok, R} | RedisData], Acc) ->
     format_return(Cmds, RedisData, [R | Acc]);
-format_return([#redis_cmd{transfer = T} | Cmds], [{ok, R} | RedisData], Acc) ->
+format_return([#redis_cmd{formatter = T} | Cmds], [{ok, R} | RedisData], Acc) ->
     format_return(Cmds, RedisData, [T(R) | Acc]);
 format_return([], [], Acc) ->
     lists:reverse(Acc).

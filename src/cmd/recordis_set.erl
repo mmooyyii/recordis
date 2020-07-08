@@ -7,7 +7,7 @@
 
 
 is_member(Key, Element) ->
-    #redis_cmd{cmd = [<<"SISMEMBER">>, Key, Element], transfer = fun(V) -> V =:= <<"1">> end}.
+    #redis_cmd{cmd = [<<"SISMEMBER">>, Key, Element], formatter = fun(V) -> V =:= <<"1">> end}.
 
 delete(Key, Remove) ->
     #redis_cmd{cmd = [<<"SREM">>, Key, Remove]}.
@@ -21,4 +21,4 @@ set(Key, Ele) ->
     #redis_cmd{cmd = [<<"SADD">>, Key, Ele]}.
 
 get(Key) ->
-    #redis_cmd{cmd = [<<"SMEMBERS">>, Key], transfer = {sets, from_list}}.
+    #redis_cmd{cmd = [<<"SMEMBERS">>, Key], formatter = {sets, from_list}}.

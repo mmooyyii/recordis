@@ -1,11 +1,11 @@
 -module(recordis).
 -author("yimo").
 
-%% API
+-include("recordis.hrl").
+
 -export([use/1, use/2]).
--export([new/1, get/1, delete/1]).
--export([update/1]).
--export([find/2]).
+-export([new/1, delete/1, update/1]).
+-export([one/1, all/1]).
 
 use(Client) ->
     put(recordis, Client).
@@ -16,14 +16,17 @@ use({Module, Q}, {Module, QP}) ->
 new(Record) ->
     recordis_ctrl:new(Record).
 
-get(Record) ->
-    recordis_ctrl:get(Record).
-
 update(Record) ->
     recordis_ctrl:update(Record).
 
 delete(Record) ->
     recordis_ctrl:delete(Record).
 
-find(Record, Where) ->
-    recordis_find:find(Record, Where).
+one(Record) ->
+    recordis_ctrl:get(Record).
+
+all(Record) ->
+    all(Record, #recordis_where{}).
+
+all(Record, Where) ->
+    recordis_find:all(Record, Where).

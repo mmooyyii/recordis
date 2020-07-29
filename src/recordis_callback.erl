@@ -1,53 +1,57 @@
 -module(recordis_callback).
 -author("yimo").
 
+-include_lib("recordis.hrl").
+
 -export([before_new/1, after_new/1]).
 -export([before_update/1, after_update/1]).
 -export([before_delete/1, after_delete/1]).
 
 
-before_new(Record1) ->
-    F = find_callback(Record1, ?FUNCTION_NAME),
-    Record2 = call(F, Record1),
-    case same_record(Record1, Record2) of
-        true -> Record2;
-        _ -> Record1
-    end.
-
-before_update(Record1) ->
-    F = find_callback(Record1, ?FUNCTION_NAME),
-    Record2 = call(F, Record1),
-    case same_record(Record1, Record2) of
-        true -> Record2;
-        _ -> Record1
-    end.
-
-before_delete(Record1) ->
-    F = find_callback(Record1, ?FUNCTION_NAME),
-    Record2 = call(F, Record1),
-    case same_record(Record1, Record2) of
-        true -> Record2;
-        _ -> Record1
-    end.
-
+before_new(Record) ->
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
+before_update(Record) ->
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
+before_delete(Record) ->
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
 after_new(Record) ->
-    F = find_callback(Record, ?FUNCTION_NAME),
-    call(F, Record).
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
 after_update(Record) ->
-    F = find_callback(Record, ?FUNCTION_NAME),
-    call(F, Record).
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
 after_delete(Record) ->
-    F = find_callback(Record, ?FUNCTION_NAME),
-    call(F, Record).
+    call(find_callback(Record, ?FUNCTION_NAME), Record).
 
 
+find_callback(Record, before_new) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.before_new;
+find_callback(Record, after_new) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.after_new;
+find_callback(Record, before_update) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.before_update;
+find_callback(Record, after_update) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.after_update;
+find_callback(Record, before_delete) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.before_delete;
+find_callback(Record, after_delete) ->
+    Callback = recordis_utils:callback(Record),
+    Callback#recordis_callback.after_delete.
 
-find_callback(Record, Function) ->
-    proplists:get_value(Function, recordis_utils:obj_callback(Record)).
 
-call(undefined, Record) -> Record;
-call({Module, Function}, Record) -> apply(Module, Function, [Record]);
-call(Function, Record) -> Function(Record).
+call([{Module, Function} | Rest], Record) ->
+    call(Rest, choice_record(Record, apply(Module, Function, [Record])));
+call([Function | Rest], Record) ->
+    call(Rest, choice_record(Record, Function(Record)));
+call([], Record) ->
+    Record.
 
-same_record(R1, R2) ->
-    erlang:element(1, R1) =:= erlang:element(1, R2).
+
+choice_record(OriginRecord, NewRecord) ->
+    case erlang:element(1, OriginRecord) =:= erlang:element(1, NewRecord) of
+        true -> NewRecord;
+        false -> OriginRecord
+    end.

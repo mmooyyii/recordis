@@ -1,10 +1,11 @@
 -module(recordis_redis).
 -author("yimo").
 
-%% API
+-include("recordis.hrl").
+
 -export([q/1]).
 -export([query/1, query_pipe/1]).
--include("recordis.hrl").
+
 
 q(Cmd) when is_record(Cmd, redis_cmd) ->
     erlang:hd(format_return([Cmd], [query(Cmd)]));

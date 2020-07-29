@@ -3,7 +3,7 @@
 
 %% API
 -export([new/0]).
-
+-include("recordis.hrl").
 
 -record(test,
 {
@@ -14,9 +14,14 @@
         {b, set},
         {c, sorted_set}
     ],
-    link = [], callback = [],
+    link = [],
+    callback = test_callback(),
+    index = [],
     id, name, a, b, c
 }).
+
+test_callback() ->
+    #recordis_callback{before_new = [fun(#test{} = T) -> T#test{a = #{1 => 123}} end]}.
 
 new() ->
     case whereis(test) of
@@ -33,4 +38,5 @@ new() ->
         a = #{1 => 2},
         c = [{1, 2}]
     },
-    recordis:new(Obj).
+    recordis:new(Obj),
+    recordis:one(Obj).

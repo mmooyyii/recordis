@@ -7,8 +7,16 @@
 
 start(Ls) ->
     set_query_flow(Ls),
-    Fq = fun(_, Cmd) -> #redis_io{function = q, in = Cmd, out = O} = get_flow(), O end,
-    Fqp = fun(_, Cmd) -> #redis_io{function = qp, in = Cmd, out = O} = get_flow(), O end,
+    Fq = fun(_, Cmd) ->
+        case get_flow() of
+            #redis_io{function = q, in = Cmd, out = O} -> O;
+            _ -> io:format("Command:~p~n", [Cmd]), throw(test_error)
+        end end,
+    Fqp = fun(_, Cmd) ->
+        case get_flow() of
+            #redis_io{function = qp, in = Cmd, out = O} -> O;
+            _ -> io:format("Command:~p~n", [Cmd]), throw(test_error)
+        end end,
     meck:expect(eredis, q, Fq),
     meck:expect(eredis, qp, Fqp).
 

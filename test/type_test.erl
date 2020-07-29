@@ -5,6 +5,7 @@
 -export([]).
 -include_lib("eunit/include/eunit.hrl").
 -include("meck_redis.hrl").
+-include("recordis.hrl").
 -record(type, {
     column = [
         {id, primary_key},
@@ -17,13 +18,13 @@
         {g, sorted_set}
     ],
     link = [],
-    callbacks = [],
+    callbacks = #recordis_callback{},
+    index = [],
     id, a, b, c, d, e, f, g
 }).
 
 save_type_test() ->
     meck_redis:start([
-        #redis_io{function = q, in = [<<"SET">>, <<"lock:type:10000">>, 1, <<"NX">>], out = {ok, <<"OK">>}},
         #redis_io{function = q, in = [<<"SISMEMBER">>, <<"type">>, <<"10000">>], out = {ok, <<"0">>}},
         #redis_io{function = qp, in =
         [
@@ -33,8 +34,7 @@ save_type_test() ->
             [<<"SADD">>, <<"type:e:10000">>, 1],
             [<<"HMSET">>, <<"type:f:10000">>, 1, 2],
             [<<"ZADD">>, <<"type:g:10000">>, 1, 2]
-        ], out = [{ok, <<"1">>}, {ok, <<"OK">>}, {ok, <<"3">>}, {ok, <<"OK">>}, {ok, <<"1">>}]},
-        #redis_io{function = q, in = [<<"DEL">>, <<"lock:type:10000">>], out = {ok, <<"1">>}}
+        ], out = [{ok, <<"1">>}, {ok, <<"OK">>}, {ok, <<"3">>}, {ok, <<"OK">>}, {ok, <<"1">>}]}
     ]
     ),
     recordis:use(test),

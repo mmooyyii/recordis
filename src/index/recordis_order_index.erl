@@ -3,7 +3,13 @@
 
 %% API
 -export([]).
+%% 仅限int，float列
 
-
-%% obj的对应字段改变后，将string转为int，修改该索引内的score值
-%% ZADD {type}:index int object_pk
+%%create(Record, Column) ->
+%%    ok.
+%%
+%%delete(Record, Column) ->
+%%    ok.
+%%
+%%update(Record, Column, Value) ->
+%%    ok.

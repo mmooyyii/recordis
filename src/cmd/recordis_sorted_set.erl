@@ -2,8 +2,11 @@
 -author("yimo").
 
 %% API
--export([set/2, get/1]).
 -include("recordis.hrl").
+
+-export([get/1, get_range/3]).
+-export([set/2]).
+-export([remove/2]).
 
 set(_Key, []) ->
     #redis_cmd{};
@@ -15,3 +18,12 @@ get(Key) ->
         cmd = [<<"ZRANGE">>, Key, 0, -1, <<"WITHSCORES">>],
         formatter = fun(Return) -> recordis_type:erl(sorted_set, Return) end
     }.
+
+get_range(Key, Left, Right) ->
+    #redis_cmd{
+        cmd = [<<"ZRANGE">>, Key, Left, Right, <<"WITHSCORES">>],
+        formatter = fun(Return) -> recordis_type:erl(sorted_set, Return) end
+    }.
+
+remove(Key, Elements) when is_list(Elements) -> #redis_cmd{cmd = [<<"ZREM">>, Key] ++ Elements};
+remove(Key, Element) -> #redis_cmd{cmd = [<<"ZREM">>, Key, Element]}.

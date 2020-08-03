@@ -41,7 +41,6 @@ get(RecordWithPk) when is_tuple(RecordWithPk) ->
 get(RecordWithPk, Keys) when is_tuple(RecordWithPk) ->
     erlang:hd(p_get([RecordWithPk], Keys)).
 
-
 batch_get([Record | _] = Records) when is_list(Records) ->
     p_get(Records, recordis_utils:column(Record)).
 
@@ -90,7 +89,7 @@ p_init_obj(Record, NKeys, SKeys) ->
     NKeysCmd = recordis_hash:set(PrimaryKey, n_keys_to_map(NKeys)),
     S_Keys = redis_s_key(Record, SKeys),
     SaveCmd = save_redis(S_Keys),
-    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd),
+    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd) ++ recordis_index:upsert(Record),
     recordis_redis:q(Cmds).
 
 parse_record(Record) ->
@@ -111,7 +110,7 @@ check_row({Key, KeyType}, Value) ->
     case {recordis_type:check(KeyType, Value), recordis_utils:is_s_key(KeyType)} of
         {true, true} -> {s, {Key, KeyType}, Value};
         {true, false} -> {n, {Key, KeyType}, Value};
-        _ -> throw(type_error)
+        _ -> throw({type_error, KeyType, Value})
     end;
 check_row(_, _) -> throw(type_error).
 
@@ -146,3 +145,6 @@ is_conflict(Record) ->
     Type = recordis_utils:type(Record),
     Pk = recordis_utils:pk(Record),
     recordis_redis:q(recordis_set:is_member(Type, Pk)).
+
+old_index_column(Record) ->
+    recordis:one(Record).

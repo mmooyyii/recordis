@@ -10,18 +10,21 @@
     column = [
         {id, primary_key},
         {name, string},
+        {code, index_string},
         {a, hash},
         {b, set},
         {c, sorted_set}
     ],
     link = [],
     callback = test_callback(),
-    index = [],
+    index = [code],
     id, name, a, b, c
 }).
 
 test_callback() ->
-    #recordis_callback{before_new = [fun(#test{} = T) -> T#test{a = #{1 => 123}} end]}.
+    #recordis_callback{
+        before_new = [fun(#test{} = T) -> T#test{a = #{1 => 123}} end]
+    }.
 
 new() ->
     case whereis(test) of
@@ -39,4 +42,4 @@ new() ->
         c = [{1, 2}]
     },
     recordis:new(Obj),
-    recordis:one(Obj).
+    recordis:one(Obj#test{id = <<"1">>}).

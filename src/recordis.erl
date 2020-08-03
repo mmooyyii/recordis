@@ -7,6 +7,9 @@
 -export([new/1, delete/1, update/1]).
 -export([one/1, all/1]).
 
+-define(SpinTimeout, 5).
+-define(KeyTimeout, 30).
+
 use(Client) ->
     put(recordis, Client).
 
@@ -14,13 +17,19 @@ use({Module, Q}, {Module, QP}) ->
     put(recordis, {{Module, Q}, {Module, QP}}).
 
 new(Record) ->
-    recordis_ctrl:new(Record).
+    recordis_lock:acquire(Record, ?SpinTimeout, ?KeyTimeout),
+    recordis_ctrl:new(Record),
+    recordis_lock:release(Record).
 
 update(Record) ->
-    recordis_ctrl:update(Record).
+    recordis_lock:acquire(Record, ?SpinTimeout, ?KeyTimeout),
+    recordis_ctrl:update(Record),
+    recordis_lock:release(Record).
 
 delete(Record) ->
-    recordis_ctrl:delete(Record).
+    recordis_lock:acquire(Record, ?SpinTimeout, ?KeyTimeout),
+    recordis_ctrl:delete(Record),
+    recordis_lock:release(Record).
 
 one(Record) ->
     recordis_ctrl:get(Record).

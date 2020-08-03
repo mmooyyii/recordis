@@ -1,5 +1,6 @@
 -author("yimo").
 
+-define(Delimiter, <<":">>).
 
 -record(redis_cmd, {
     cmd :: list(),

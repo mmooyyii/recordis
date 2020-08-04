@@ -18,5 +18,5 @@
 
 -record(recordis_where, {
     column :: atom(),
-    expr = []
+    range :: {binary(), binary()} | {number(), number()} | binary() | number()
 }).

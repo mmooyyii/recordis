@@ -72,7 +72,7 @@ get_s_keys(Record, SKeys) ->
     lists:map(fun
                   ({hash, K, _}) -> recordis_hash:get(K);
                   ({set, K, _}) -> recordis_set:get(K);
-                  ({sorted_set, K, _}) -> recordis_sorted_set:get(K)
+                  ({sorted_set, K, _}) -> recordis_sorted_set:get_all(K)
               end, redis_s_key(Record, SKeys)).
 
 init_obj(Record) ->
@@ -89,7 +89,7 @@ p_init_obj(Record, NKeys, SKeys) ->
     NKeysCmd = recordis_hash:set(PrimaryKey, n_keys_to_map(NKeys)),
     S_Keys = redis_s_key(Record, SKeys),
     SaveCmd = save_redis(S_Keys),
-    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd) ++ recordis_index:upsert(Record),
+    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd),
     recordis_redis:q(Cmds).
 
 parse_record(Record) ->
@@ -145,6 +145,3 @@ is_conflict(Record) ->
     Type = recordis_utils:type(Record),
     Pk = recordis_utils:pk(Record),
     recordis_redis:q(recordis_set:is_member(Type, Pk)).
-
-old_index_column(Record) ->
-    recordis:one(Record).

@@ -7,14 +7,14 @@
 -export([string_hash/1]).
 
 -include("recordis.hrl").
-%% int索引     使用sorted_set实现
-%% index_string 索引 使用Karp–Rabin算法把string转成int实现
 
+%% int索引     使用sorted_set实现
+%% index_string 索引 使用Karp–Rabin算法(伪)把string转成int实现
 select(Record, Column, Left, Right) ->
     L = to_sorted_set_key(Left),
     R = to_sorted_set_key(Right),
     Index = recordis_concat:index(Record, Column),
-    recordis_sorted_set:get_range(Index, L, R).
+    recordis_sorted_set:get_score(Index, L, R).
 
 upsert(Record) ->
     Indexes = recordis_utils:index(Record),
@@ -35,11 +35,16 @@ delete(Record, Column) ->
     Pk = recordis_utils:pk(Record),
     recordis_sorted_set:remove(Index, Pk).
 
-create(_Record, _Column) ->
+create(Record, Column) ->
+    Indexes = recordis_utils:index(Record),
+    true = lists:member(Column, Indexes),
     throw(todo_error).
 
-drop(_Record, _Column) ->
-    throw(todo_error).
+drop(Record, Column) ->
+    Indexes = recordis_utils:index(Record),
+    false = lists:member(Column, Indexes),
+    Index = recordis_concat:index(Record, Column),
+    recordis_key:delete(Index).
 
 to_sorted_set_key(N) when is_number(N) -> N;
 to_sorted_set_key(Binary) when is_binary(Binary) -> string_hash(Binary).

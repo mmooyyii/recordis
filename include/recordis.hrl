@@ -17,6 +17,7 @@
 }).
 
 -record(recordis_where, {
+    keys :: list(),
     column :: atom(),
-    range :: {binary(), binary()} | {number(), number()} | binary() | number()
+    condition :: {binary(), binary()} | {number(), number()} | binary() | number()
 }).

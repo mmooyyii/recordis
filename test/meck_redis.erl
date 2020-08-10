@@ -10,12 +10,12 @@ start(Ls) ->
     Fq = fun(_, Cmd) ->
         case get_flow() of
             #redis_io{function = q, in = Cmd, out = O} -> O;
-            _ -> io:format("Command:~p~n", [Cmd]), throw(test_error)
+            R -> throw({input_error, Cmd, R#redis_io.in})
         end end,
     Fqp = fun(_, Cmd) ->
         case get_flow() of
             #redis_io{function = qp, in = Cmd, out = O} -> O;
-            _ -> io:format("Command:~p~n", [Cmd]), throw(test_error)
+            R -> throw({input_error, Cmd, R#redis_io.in})
         end end,
     meck:expect(eredis, q, Fq),
     meck:expect(eredis, qp, Fqp).
@@ -28,4 +28,3 @@ get_flow() ->
     Step = get(step),
     put(step, Step + 1),
     lists:nth(Step, get(query)).
-

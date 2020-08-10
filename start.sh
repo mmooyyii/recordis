@@ -5,4 +5,4 @@ erl \
 -pa _build/test/lib/recordis/test/ \
 -name "abc@127.0.0.1" \
 -run load_all_module start \
--setcookie abc
+-setcookie abcd

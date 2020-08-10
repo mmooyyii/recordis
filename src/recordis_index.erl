@@ -2,14 +2,14 @@
 -author("yimo").
 
 -export([select/4]).
--export([create/2, drop/2]).
+-export([create/2, reindex/2, drop/2]).
 -export([upsert/1, delete/1]).
 -export([string_hash/1]).
 
 -include("recordis.hrl").
 
 %% int索引     使用sorted_set实现
-%% index_string 索引 使用Karp–Rabin算法(伪)把string转成int实现
+%% index_string 索引 使用Karp–Rabin算法把string转成int实现
 select(Record, Column, Left, Right) ->
     L = to_sorted_set_key(Left),
     R = to_sorted_set_key(Right),
@@ -39,6 +39,10 @@ create(Record, Column) ->
     Indexes = recordis_utils:index(Record),
     true = lists:member(Column, Indexes),
     throw(todo_error).
+
+reindex(Record, Column) ->
+    drop(Record, Column),
+    create(Record, Column).
 
 drop(Record, Column) ->
     Indexes = recordis_utils:index(Record),

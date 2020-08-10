@@ -102,4 +102,4 @@ list_find(Key, Ls) -> list_find(Key, Ls, 1).
 
 list_find(_Key, [], _Index) -> throw(value_error);
 list_find(Key, [Key | _], Index) -> Index;
-list_find(Key, [_ | Rest], Index) -> list_find(Key, Rest, Index).
+list_find(Key, [_ | Rest], Index) -> list_find(Key, Rest, Index + 1).

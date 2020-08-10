@@ -27,11 +27,13 @@ update(PreRecord) ->
     end.
 
 delete(PreRecord) ->
-    %% 删除时会级联删除relation中的关系
     Record = recordis_callback:before_new(PreRecord),
     Type = recordis_utils:type(Record),
     Pk = recordis_utils:pk(Record),
-    recordis_redis:q([recordis_key:delete(recordis_utils:all_keys(Record)), recordis_set:delete(Type, Pk)]).
+    Cmd = recordis_key:delete(recordis_utils:all_keys(Record)) ++
+        [recordis_set:delete(Type, Pk)] ++
+        recordis_index:delete(Record),
+    recordis_redis:q(Cmd).
 
 -spec get(tuple()) -> tuple().
 get(RecordWithPk) when is_tuple(RecordWithPk) ->
@@ -41,7 +43,7 @@ get(RecordWithPk) when is_tuple(RecordWithPk) ->
 get(RecordWithPk, Keys) when is_tuple(RecordWithPk) ->
     erlang:hd(p_get([RecordWithPk], Keys)).
 
-batch_get([Record | _] = Records) when is_list(Records) ->
+batch_get([Record | _] = Records) ->
     p_get(Records, recordis_utils:column(Record)).
 
 batch_get(Records, Keys) when is_list(Records) ->
@@ -89,7 +91,7 @@ p_init_obj(Record, NKeys, SKeys) ->
     NKeysCmd = recordis_hash:set(PrimaryKey, n_keys_to_map(NKeys)),
     S_Keys = redis_s_key(Record, SKeys),
     SaveCmd = save_redis(S_Keys),
-    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd),
+    Cmds = [PkCmd, NKeysCmd] ++ lists:reverse(SaveCmd) ++ recordis_index:upsert(Record),
     recordis_redis:q(Cmds).
 
 parse_record(Record) ->

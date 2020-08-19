@@ -1,23 +1,103 @@
-### recordis 
+# recordis 
 
-a redis orm
+A Redis ORM for Erlang, 
 
-#### 本项目用于解决以下问题
+## Overview
 
-    1. redis储存导致键的依赖关系混乱，使用者无法直观地看到键的类型，键与键的关联关系。
-    导致删除，修改的时候非常容易出错或遗忘，
-    2. 拓展数据类型，比如redis中不区分int和string，每次从redis中取数据时，都要进行类型转换。
-    3. 部分键用erlang:term_binary()这种方式去存，导致查询和修改都很不方便。
-    4. 如果要增加一些搜索功能，会增加很多代码，数据也容易不同步。
-   
-#### 对于record的格式约束过大的问题。
+- ORM
+- Extension Erlang Type: int,float,binary,term,map,proplist,sets
+- Index for number and string
+- Transaction(use SET NX)
+- Callbacks(Before/After Create/Update/Delete)
 
-    1. 可以通过parse_transfer实现，但我觉得意义不大。
-    2. 通过函数校验即可保证正确性。
-    
-#### 使用了进程字典
-    
-    所以不要操作以下键 recordis，recordis_pipe
+## Quick Start
+```erlang
+-include("recordis.hrl").
+-export([save/0,update/0,search/0,get/0,delete/0]).
+%%% Create Model
+-record(example,
+{
+    column = [{id, primary_key},{name, string},{age,int}],
+    link = [],
+    callback = example_callback(),
+    index = [age],
+    id, 
+    name,
+    age
+}).
+example_callback() ->
+    #recordis_callback{before_new = [fun(#example{} = T) -> T#example{name = <<"123">>} end]}.
+%%% Save to Redis
+save()->
+    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+    recordis:use(C),
+    R = #example{id = <<"1">>,name = <<"mmooyyii">>,age = 25},
+    recordis:new(R).
+%%% Update
+update()->
+    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+    recordis:use(C),
+    R = #example{id = <<"1">>,age = 26},
+    recordis:update(R).
+%%% Delete From Redis
+delete()->
+    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+    recordis:use(C),
+    R = #example{id = <<"1">>},
+    recordis:delete(R).
+%%% Get by Primary Key
+get()->
+    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+    recordis:use(C),
+    R = #example{id = <<"1">>},
+    Ret1 = recordis:one(R),
+    Ret2 = recordis:one(R,[name,age]),
+    {Ret1,Ret2}. 
+%%% Search On Index
+search()->
+    {ok, C} = eredis:start_link("127.0.0.1", 6379, 1),
+    recordis:use(C),
+    recordis_find:all(#example{}, #recordis_where{column = age, condition = {20,30}}).
+```
 
-#### 锁
 
+### Create Model
+```
+-record(example,
+{
+    column = [{id, primary_key},{name, string},{age,int}],
+    link = [],
+    callback = example_callback(),
+    index = [],
+    id, 
+    name,
+    age
+}).
+```
+
+#### column
+declare columns name and type
+
+|Recordis Type| Erlang Type| Describe |
+|:----:|:----:|:----:|
+| primary_key  | binary |     unique  |
+| string  | binary |    |
+| int  | integer |    |
+| float  | float |    |
+| term  | any |    |
+| hash  | maps |    |
+| set  | sets |    |
+| sorted_set  | proplist |    |
+| index_string  | binary | in 0-9 and A-Z and length less than 10 |
+
+#### link
+other record
+#### callback  
+recordis_callback in "recordis.hrl" 
+#### index  
+Index column must is in column and column type is int,float or index_string.
+#### columns name  
+Same name and same sort in column.
+
+## Warning
+Do not opearte 'recordis' in process dict

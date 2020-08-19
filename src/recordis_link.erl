@@ -5,31 +5,19 @@
 -export([is_linked/2, link/2, unlink/2, linked/2]).
 
 is_linked(RecordA, RecordB) ->
-    case is_linkable(RecordA, RecordB) of
-        true ->
-            {LinkKey, PkB} = link_args(RecordA, RecordB),
-            recordis_redis:q(recordis_set:is_member(LinkKey, PkB));
-        false ->
-            false
-    end.
+    true = is_linkable(RecordA, RecordB),
+    {LinkKey, PkB} = link_args(RecordA, RecordB),
+    recordis_redis:q(recordis_set:is_member(LinkKey, PkB)).
 
 link(RecordA, RecordB) ->
-    case is_linkable(RecordA, RecordB) of
-        true ->
-            {LinkKey, PkB} = link_args(RecordA, RecordB),
-            recordis_redis:q(recordis_set:set(LinkKey, PkB));
-        false ->
-            error
-    end.
+    true = is_linkable(RecordA, RecordB),
+    {LinkKey, PkB} = link_args(RecordA, RecordB),
+    recordis_redis:q(recordis_set:set(LinkKey, PkB)).
 
 unlink(RecordA, RecordB) ->
-    case is_linkable(RecordA, RecordB) of
-        true ->
-            {LinkKey, PkB} = link_args(RecordA, RecordB),
-            recordis_redis:q(recordis_set:delete(LinkKey, PkB));
-        false ->
-            error
-    end.
+    true = is_linkable(RecordA, RecordB),
+    {LinkKey, PkB} = link_args(RecordA, RecordB),
+    recordis_redis:q(recordis_set:delete(LinkKey, PkB)).
 
 is_linkable(RecordA, RecordB) ->
     Links = recordis_utils:link(RecordA),

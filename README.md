@@ -80,15 +80,15 @@ declare columns name and type
 
 |Recordis Type| Erlang Type| Describe |
 |:----:|:----:|:----:|
-| primary_key  | binary |     unique  |
-| string  | binary |    |
-| int  | integer |    |
-| float  | float |    |
-| term  | any |    |
-| hash  | maps |    |
-| set  | sets |    |
-| sorted_set  | proplist |    |
-| index_string  | binary | in 0-9 and A-Z and length less than 10 |
+| primary_key  | binary() | unique  |
+| string  | binary() |    |
+| int  | integer() |    |
+| float  | float() |    |
+| term  | any() |   |
+| hash  | maps() |    |
+| set  | sets() |    |
+| sorted_set  | proplist() |    |
+| index_string  | binary() | in 0-9 and A-Z and length less than 10 |
 
 #### link
 other record
@@ -101,3 +101,6 @@ Same name and same sort in column.
 
 ## Warning
 Do not opearte 'recordis' in process dict
+
+## License
+Apache License 2.0
